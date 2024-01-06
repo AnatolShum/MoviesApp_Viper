@@ -13,7 +13,8 @@ protocol MoviesRouterProtocol: AnyObject {
     
     func openTrailersView()
     func openMovieDetailView(_ movie: Movie)
-    func playTrailer()
+    func playTrailer(key: String)
+    func openTrailerDetails(_ trailer: Trailer)
 }
 
 class MoviesRouter: MoviesRouterProtocol {
@@ -21,6 +22,8 @@ class MoviesRouter: MoviesRouterProtocol {
     
     private var trailersView: TrailersController!
     private var movieDetailView: MovieDetailController!
+    private var playerController: PlayerController!
+    private var trailerDetailView: TrailerDetailController!
     
     required init(_ viewController: MoviesController) {
         self.viewController = viewController
@@ -36,7 +39,13 @@ class MoviesRouter: MoviesRouterProtocol {
         viewController?.navigationController?.pushViewController(movieDetailView, animated: true)
     }
     
-    func playTrailer() {
-        
+    func playTrailer(key: String) {
+        playerController = PlayerController(key: key)
+        viewController?.navigationController?.pushViewController(playerController, animated: true)
+    }
+    
+    func openTrailerDetails(_ trailer: Trailer) {
+        trailerDetailView = TrailerDetailController(trailer: trailer)
+        viewController?.navigationController?.pushViewController(trailerDetailView, animated: true)
     }
 }

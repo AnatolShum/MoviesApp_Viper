@@ -61,6 +61,9 @@ class MoviesController: UICollectionViewController, MoviesViewProtocol {
         let item = dataSource.itemIdentifier(for: indexPath)
         var movie: Movie?
         switch indexPath.section {
+        case 0:
+            guard let trailer = item?.trailer else { return }
+            presenter?.showTrailerDetails(trailer)
         case 1:
             movie = item?.nowPlaying
         case 2:

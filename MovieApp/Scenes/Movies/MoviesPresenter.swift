@@ -21,6 +21,8 @@ protocol MoviesPresenterProtocol: AnyObject {
     func interactorDidFetchImage()
     func showTrailers()
     func showMovieDetails(_ movie: Movie)
+    func showTrailerDetails(_ trailer: Trailer)
+    func playTrailer(key: String)
 }
 
 class MoviesPresenter: MoviesPresenterProtocol {
@@ -62,6 +64,14 @@ class MoviesPresenter: MoviesPresenterProtocol {
     
     func showMovieDetails(_ movie: Movie) {
         router?.openMovieDetailView(movie)
+    }
+    
+    func showTrailerDetails(_ trailer: Trailer) {
+        router?.openTrailerDetails(trailer)
+    }
+    
+    func playTrailer(key: String) {
+        router?.playTrailer(key: key)
     }
     
 }

@@ -8,7 +8,7 @@
 import UIKit
 
 protocol MovieTrailerCellDelegate: AnyObject {
-    func playTrailer(key: String?)
+    func playTrailer(key: String)
 }
 
 class MovieTrailerCell: UICollectionViewCell {
@@ -59,7 +59,8 @@ class MovieTrailerCell: UICollectionViewCell {
     }
     
     @objc func playTapped() {
-        delegate?.playTrailer(key: videoKey)
+        guard let key = videoKey else { return }
+        delegate?.playTrailer(key: key)
     }
     
     private func createUI() {

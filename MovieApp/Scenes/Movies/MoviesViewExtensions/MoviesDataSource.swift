@@ -18,6 +18,7 @@ extension MoviesController {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MovieTrailerCell.reuseIdentifier, for: indexPath) as! MovieTrailerCell
                 
                 cell.configureCell(with: item.trailer!)
+                cell.delegate = self
                 
                 return cell
             case .nowPlaying:

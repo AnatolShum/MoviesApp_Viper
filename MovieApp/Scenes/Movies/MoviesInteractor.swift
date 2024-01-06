@@ -28,8 +28,7 @@ class MoviesInteractor: MoviesInteractorProtocol {
     }
     
     func fetchUpcoming(with page: Int) {
-        Network.Client.shared.get(.upcoming(page: page)) { [weak self] (result:
-                                                                            Result<Network.Types.Response.MovieResults, Network.Errors>) in
+        Network.Client.shared.get(.upcoming(page: page)) { [weak self] (result: Result<Network.Types.Response.MovieResults, Network.Errors>) in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 switch result {
