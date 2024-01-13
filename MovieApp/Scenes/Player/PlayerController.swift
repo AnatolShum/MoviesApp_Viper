@@ -39,16 +39,14 @@ class PlayerController: UIViewController, WKUIDelegate {
         let webConfiguration = WKWebViewConfiguration()
         webView = WKWebView(frame: .zero, configuration: webConfiguration)
         webView.uiDelegate = self
+        webView.navigationDelegate = self
         webView.underPageBackgroundColor = .black
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .black
-        view.addSubview(activityIndicator)
-        activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        setUI()
         
         if let url = buildUrl() {
             let request = URLRequest(url: url)
@@ -76,4 +74,22 @@ class PlayerController: UIViewController, WKUIDelegate {
         return url
     }
     
+    private func setUI() {
+        view.backgroundColor = .black
+        view.addSubview(activityIndicator)
+        activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+    }
+    
+}
+
+extension PlayerController: WKNavigationDelegate {
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+        let action = UIAlertAction(title: "Dismiss", style: .default) { _ in
+            self.navigationController?.popViewController(animated: false)
+        }
+        alert.addAction(action)
+        present(alert, animated: true)
+    }
 }

@@ -7,12 +7,19 @@
 
 import Foundation
 import UIKit
+import SwiftData
 
-struct Trailer: Equatable, Hashable {
-    let title: String?
-    var trailerImage: UIImage?
+@Model
+class Trailer: Equatable, Hashable {
+    var id: Int
+    var title: String?
+    var imageData: Data?
     var videoKey: String?
-    var noTrailerImage: UIImage? {
-        videoKey == nil ? UIImage(systemName: "play.slash.fill")! : nil
+    
+    init(id: Int, title: String?, imageData: Data?, videoKey: String?) {
+        self.id = id
+        self.title = title
+        self.imageData = imageData
+        self.videoKey = videoKey
     }
 }

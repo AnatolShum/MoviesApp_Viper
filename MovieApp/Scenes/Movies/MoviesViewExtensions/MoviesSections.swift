@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum MoviesSections: Hashable {
+enum MoviesSections: Hashable, CaseIterable {
         case trailer
         case nowPlaying
         case topRated

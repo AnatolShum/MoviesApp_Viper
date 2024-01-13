@@ -16,13 +16,14 @@ protocol MoviesPresenterProtocol: AnyObject {
     var interactor: MoviesInteractorProtocol? { get set }
     var view: MoviesViewProtocol? { get set }
     var upcomingPage: Int { get set }
+    var nowPlayingPage: Int { get set }
+    var topRatedPage: Int { get set }
+    var popularPage: Int { get set }
     
-    func interactorDidFetchMovies()
-    func interactorDidFetchImage()
     func showTrailers()
     func showMovieDetails(_ movie: Movie)
-    func showTrailerDetails(_ trailer: Trailer)
     func playTrailer(key: String)
+    func getMovie(id: Int)
 }
 
 class MoviesPresenter: MoviesPresenterProtocol {
@@ -35,27 +36,16 @@ class MoviesPresenter: MoviesPresenterProtocol {
             self.interactor?.fetchPopular(with: popularPage)
         }
     }
-    var view: MoviesViewProtocol?
     
     var upcomingPage: Int = 1
     var nowPlayingPage: Int = 1
     var topRatedPage: Int = 1
     var popularPage: Int = 1
     
+    var view: MoviesViewProtocol?
+        
     required init(_ view: MoviesViewProtocol) {
         self.view = view
-    }
-    
-    func interactorDidFetchMovies() {
-        self.view?.applyDataSource()
-    }
-    
-    func interactorDidFetchImage() {
-        self.view?.snapshot.deleteItems(Array(Item.trailers.values))
-        self.view?.snapshot.deleteSections([.trailer])
-        self.view?.snapshot.insertSections([.trailer], beforeSection: .nowPlaying)
-        self.view?.snapshot.appendItems(Array(Item.trailers.values), toSection: .trailer)
-        self.view?.dataSource.apply(self.view!.snapshot)
     }
     
     func showTrailers() {
@@ -66,12 +56,64 @@ class MoviesPresenter: MoviesPresenterProtocol {
         router?.openMovieDetailView(movie)
     }
     
-    func showTrailerDetails(_ trailer: Trailer) {
-        router?.openTrailerDetails(trailer)
-    }
-    
     func playTrailer(key: String) {
         router?.playTrailer(key: key)
+    }
+    
+    func getMovie(id: Int) {
+        interactor?.fetchMovieById(id: id)
+    }
+    
+}
+
+extension MoviesPresenter: MoviesInteractorOutputProtocol {
+    func fetchNowPlayingSuccess(nowPlayingMovies: [Entities]) {
+        view?.nowPlayingMovies = nowPlayingMovies
+        view?.moviesDataSource(.nowPlaying)
+    }
+    
+    func fetchTopRatedSuccess(topRatedMovies: [Entities]) {
+        view?.topRatedMovies = topRatedMovies
+        view?.moviesDataSource(.topRated)
+    }
+    
+    func fetchPopularSuccess(popularMovies: [Entities]) {
+        view?.popularMovies = popularMovies
+        view?.moviesDataSource(.popular)
+    }
+    
+    func fetchUpcomingSuccess(upcomingMovies: [Entities]) {
+//        print(upcomingMovies.first?.movie?.title)
+    }
+    
+    func fetchedMovieById(movie: Movie) {
+        self.view?.setMovie(movie)
+    }
+    
+    func fetchTrailersSuccess(trailers: [Entities]) {
+        view?.trailers = trailers
+        view?.trailerDataSource()
+    }
+    
+    func fetchTrailersFailure(error: Error) {
+        
+    }
+    
+    
+    func fetchUpcomingFailure(error: Error) {
+        
+    }
+   
+    func fetchPopularFailure(error: Error) {
+        
+    }
+    
+    func fetchTopRatedFailure(error: Error) {
+        
+    }
+    
+    func fetchNowPlayingFailure(error: Error) {
+        
     }
     
 }

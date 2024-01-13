@@ -24,19 +24,19 @@ extension MoviesController {
             case .nowPlaying:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MovieCell.reuseIdentifier, for: indexPath) as! MovieCell
                 
-                cell.configureCell(with: item.nowPlaying!)
+                cell.configureCell(with: item.movie!)
                 
                 return cell
             case .topRated:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MovieCell.reuseIdentifier, for: indexPath) as! MovieCell
                 
-                cell.configureCell(with: item.topRated!)
+                cell.configureCell(with: item.movie!)
   
                 return cell
             case .popular:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MovieCell.reuseIdentifier, for: indexPath) as! MovieCell
                 
-                cell.configureCell(with: item.popular!)
+                cell.configureCell(with: item.movie!)
            
                 return cell
             }
@@ -91,16 +91,48 @@ extension MoviesController {
         }
     }
     
-    func applyDataSource() {
-        snapshot.deleteSections([.trailer, .nowPlaying, .topRated, .popular])
-        snapshot.deleteAllItems()
-        
-        snapshot.appendSections([.trailer, .nowPlaying, .topRated, .popular])
-        snapshot.appendItems(Array(Item.trailers.values), toSection: .trailer)
-        snapshot.appendItems(Item.nowPlayingMovies, toSection: .nowPlaying)
-        snapshot.appendItems(Item.topRatedMovies, toSection: .topRated)
-        snapshot.appendItems(Item.popularMovies, toSection: .popular)
-        sections = snapshot.sectionIdentifiers
-        dataSource.apply(snapshot)
+    func trailerDataSource() {
+        DispatchQueue.main.async {
+            let trailerSection: [MoviesSections] = [.trailer]
+            let allCasesCount = MoviesSections.allCases.count
+            let sectionCount = allCasesCount - trailerSection.count
+            if self.snapshot.sectionIdentifiers.isEmpty {
+                self.snapshot.appendSections(trailerSection)
+            } else if self.snapshot.sectionIdentifiers.count == sectionCount {
+                self.snapshot.insertSections(trailerSection, beforeSection: .nowPlaying)
+            }
+            
+            self.snapshot.appendItems(self.trailers, toSection: .trailer)
+            self.sections = self.snapshot.sectionIdentifiers
+            self.dataSource.apply(self.snapshot)
+        }
     }
+    
+    func moviesDataSource(_ section: MoviesSections) {
+        DispatchQueue.main.async {
+            let moviesSections: [MoviesSections] = [.nowPlaying, .topRated, .popular]
+            let allCasesCount = MoviesSections.allCases.count
+            let sectionCount = allCasesCount - moviesSections.count
+            if self.snapshot.sectionIdentifiers.isEmpty {
+                self.snapshot.appendSections(moviesSections)
+            } else if self.snapshot.sectionIdentifiers.count == sectionCount {
+                self.snapshot.insertSections(moviesSections, afterSection: .trailer)
+            }
+            
+            switch section {
+            case .nowPlaying:
+                self.snapshot.appendItems(self.nowPlayingMovies, toSection: .nowPlaying)
+            case .topRated:
+                self.snapshot.appendItems(self.topRatedMovies, toSection: .topRated)
+            case .popular:
+                self.snapshot.appendItems(self.popularMovies, toSection: .popular)
+            default:
+                break
+            }
+            
+            self.sections = self.snapshot.sectionIdentifiers
+            self.dataSource.apply(self.snapshot)
+        }
+    }
+    
 }

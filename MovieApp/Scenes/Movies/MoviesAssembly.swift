@@ -20,6 +20,7 @@ class MoviesAssembly: MoviesAssemblyProtocol {
         
         viewController.presenter = presenter
         presenter.interactor = interactor
+        interactor.output = presenter
         presenter.router = router
     }
     

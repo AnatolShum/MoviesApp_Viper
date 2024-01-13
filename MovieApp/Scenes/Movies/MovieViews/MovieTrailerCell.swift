@@ -20,7 +20,7 @@ class MovieTrailerCell: UICollectionViewCell {
     let trailerImageView: UIImageView = {
         let image = UIImageView()
         image.image = UIImage(systemName: "film")
-        image.tintColor = .white.withAlphaComponent(0.1)
+        image.tintColor = .white.withAlphaComponent(0.02)
         image.contentMode = .scaleAspectFit
         image.clipsToBounds = true
         image.layer.cornerRadius = 20
@@ -30,9 +30,6 @@ class MovieTrailerCell: UICollectionViewCell {
     
     let playButton: UIButton = {
         let button = UIButton()
-        let configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: .regular)
-        let image = UIImage(systemName: "play.circle", withConfiguration: configuration)
-        button.setImage(image, for: .normal)
         button.tintColor = .white.withAlphaComponent(0.7)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -88,17 +85,32 @@ class MovieTrailerCell: UICollectionViewCell {
     func configureCell(with trailer: Trailer) {
         DispatchQueue.main.async {
             self.trailerImageView.contentMode = .scaleAspectFill
-            self.trailerImageView.image = trailer.trailerImage
+            self.trailerImageView.image = self.getImage(trailer.imageData)
             self.trailerTitle.text = trailer.title
             self.videoKey = trailer.videoKey
             self.setButtonImage(trailer)
         }
     }
     
+    private func getImage(_ data: Data?) -> UIImage {
+        if let data {
+            return UIImage(data: data)!
+        } else {
+            return UIImage(systemName: "photo")!
+        }
+    }
+    
     private func setButtonImage(_ trailer: Trailer) {
-        guard trailer.videoKey != nil else { return }
-        guard let image = trailer.noTrailerImage else { return }
-        let configuration = UIImage.SymbolConfiguration(pointSize: 40, weight: .regular)
+        var image: UIImage
+        var configuration: UIImage.Configuration
+        if trailer.videoKey == nil {
+            image = UIImage(systemName: "play.slash.fill")!
+            configuration = UIImage.SymbolConfiguration(pointSize: 40, weight: .regular)
+        } else {
+            image = UIImage(systemName: "play.circle")!
+            configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: .regular)
+        }
+        
         playButton.setImage(image.withConfiguration(configuration), for: .normal)
     }
 }

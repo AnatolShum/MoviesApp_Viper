@@ -9,29 +9,31 @@ import UIKit
 
 protocol MoviesViewProtocol {
     var presenter: MoviesPresenterProtocol? { get set }
-    var sections: [MoviesSections] { get set }
-    var dataSource: UICollectionViewDiffableDataSource<MoviesSections, Item>! { get set }
-    var snapshot: NSDiffableDataSourceSnapshot<MoviesSections, Item> { get set }
-    var nowPlayingPage: Int { get set }
-    var topRatedPage: Int { get set }
-    var popularPage: Int { get set }
+    var trailers: [Entities] { get set }
+    var nowPlayingMovies: [Entities] { get set }
+    var topRatedMovies: [Entities] { get set }
+    var popularMovies: [Entities] { get set }
     
-    func applyDataSource()
+    func trailerDataSource()
+    func moviesDataSource(_ section: MoviesSections)
+    func setMovie(_ movie: Movie)
 }
 
 class MoviesController: UICollectionViewController, MoviesViewProtocol {
     var presenter: MoviesPresenterProtocol?
     
     var sections = [MoviesSections]()
-    var dataSource: UICollectionViewDiffableDataSource<MoviesSections, Item>!
-    var snapshot = NSDiffableDataSourceSnapshot<MoviesSections, Item>()
-    var nowPlayingPage: Int = 1
-    var topRatedPage: Int = 1
-    var popularPage: Int = 1
+    var dataSource: UICollectionViewDiffableDataSource<MoviesSections, Entities>!
+    var snapshot = NSDiffableDataSourceSnapshot<MoviesSections, Entities>()
+    var filteredMovie: Movie? = nil
     
     private let assembly: MoviesAssemblyProtocol = MoviesAssembly()
     private let colorView = ColorView()
     
+    var trailers: [Entities] = []
+    var nowPlayingMovies: [Entities] = []
+    var topRatedMovies: [Entities] = []
+    var popularMovies: [Entities] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,14 +64,15 @@ class MoviesController: UICollectionViewController, MoviesViewProtocol {
         var movie: Movie?
         switch indexPath.section {
         case 0:
-            guard let trailer = item?.trailer else { return }
-            presenter?.showTrailerDetails(trailer)
+            getMovie(item?.trailer)
+            
+            movie = self.filteredMovie
         case 1:
-            movie = item?.nowPlaying
+            movie = item?.movie
         case 2:
-            movie = item?.topRated
+            movie = item?.movie
         case 3:
-            movie = item?.popular
+            movie = item?.movie
         default:
             break
         }
@@ -77,5 +80,14 @@ class MoviesController: UICollectionViewController, MoviesViewProtocol {
         presenter?.showMovieDetails(movie)
     }
     
+    private func getMovie(_ trailer: Trailer?) {
+        guard let id = trailer?.id else { return }
+        presenter?.interactor?.fetchMovieById(id: id)
+    }
+    
+    func setMovie(_ movie: Movie) {
+        filteredMovie = movie
+    }
+   
 }
 
