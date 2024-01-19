@@ -60,6 +60,7 @@
 		3CEA7B3F2B48330F007DA039 /* PlayerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEA7B3E2B48330F007DA039 /* PlayerController.swift */; };
 		3CEA7B412B4834E5007DA039 /* MoviesTrailerCellDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEA7B402B4834E5007DA039 /* MoviesTrailerCellDelegate.swift */; };
 		3CEA7B442B4D43B0007DA039 /* DatabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEA7B432B4D43B0007DA039 /* DatabaseService.swift */; };
+		3CFADF432B5A9D820008E00A /* ResourcesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFADF422B5A9D820008E00A /* ResourcesManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -118,6 +119,7 @@
 		3CEA7B3E2B48330F007DA039 /* PlayerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerController.swift; sourceTree = "<group>"; };
 		3CEA7B402B4834E5007DA039 /* MoviesTrailerCellDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoviesTrailerCellDelegate.swift; sourceTree = "<group>"; };
 		3CEA7B432B4D43B0007DA039 /* DatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseService.swift; sourceTree = "<group>"; };
+		3CFADF422B5A9D820008E00A /* ResourcesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourcesManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,6 +190,7 @@
 		3C922F8A2B2CB0BE0076AF75 /* MovieApp */ = {
 			isa = PBXGroup;
 			children = (
+				3CFADF412B5A9D3D0008E00A /* OnDemandResourcesManager */,
 				3C922F9F2B2CB3710076AF75 /* Application */,
 				3C922FA02B2CB3860076AF75 /* TabBarController */,
 				3C922FD12B2CB6AE0076AF75 /* Entities */,
@@ -352,6 +355,14 @@
 			path = DBService;
 			sourceTree = "<group>";
 		};
+		3CFADF412B5A9D3D0008E00A /* OnDemandResourcesManager */ = {
+			isa = PBXGroup;
+			children = (
+				3CFADF422B5A9D820008E00A /* ResourcesManager.swift */,
+			);
+			path = OnDemandResourcesManager;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -379,6 +390,9 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
+				KnownAssetTags = (
+					ApiKey,
+				);
 				LastSwiftUpdateCheck = 1510;
 				LastUpgradeCheck = 1510;
 				TargetAttributes = {
@@ -452,6 +466,7 @@
 				3C922FF02B30AB040076AF75 /* FooterView.swift in Sources */,
 				3C922FEE2B3098260076AF75 /* MovieTrailerCell.swift in Sources */,
 				3C922FCB2B2CB66F0076AF75 /* MovieCell.swift in Sources */,
+				3CFADF432B5A9D820008E00A /* ResourcesManager.swift in Sources */,
 				3C922F902B2CB0BE0076AF75 /* MoviesView.swift in Sources */,
 				3CEA7B3F2B48330F007DA039 /* PlayerController.swift in Sources */,
 				3C922FD52B2CB6C80076AF75 /* Photos.swift in Sources */,

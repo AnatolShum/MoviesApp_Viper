@@ -20,12 +20,13 @@ extension Network {
         case upcoming(page: Int)
         
         var url: URL? {
+            let resourcesManager = ResourcesManager()
+            guard let apiKey = resourcesManager.getKey() else { return nil }
             var urlComponents = URLComponents()
             urlComponents.scheme = "https"
             urlComponents.host = "api.themoviedb.org"
             let apiParameter = "api_key"
-            let apiValue = "82494d16f78e0aa1a4a03a103791b923"
-            let apiQueryItem = URLQueryItem(name: apiParameter, value: apiValue)
+            let apiQueryItem = URLQueryItem(name: apiParameter, value: apiKey)
             switch self {
             case .movie(id: let id):
                 guard let id = id else { return nil }
