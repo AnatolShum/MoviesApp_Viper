@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 
 final class ResourcesManager {
-    private let group = DispatchGroup()
+    private let keyGroup = DispatchGroup()
     private let tags = ["ApiKey"]
     
     private func loadResources(completion: @escaping (NSBundleResourceRequest?, Error?) -> Void) {
@@ -36,21 +36,22 @@ final class ResourcesManager {
     func getKey() -> ApiKey {
         var key: String? = nil
         
-        group.enter()
-        loadResources { odr, error in
+        keyGroup.enter()
+        loadResources { [weak self] odr, error in
+            guard let self else { return }
             if error == nil, odr != nil {
                 guard let resources = NSDataAsset(name: "secret") else { return }
                 let data = resources.data
                 let nsKey = NSString(data: data, encoding: NSUTF8StringEncoding)
                 key = nsKey as? String
                 
-                self.group.leave()
+                self.keyGroup.leave()
             } else {
-                self.group.leave()
+                self.keyGroup.leave()
             }
         }
         
-        group.wait()
+        keyGroup.wait()
         return key
     }
 }
