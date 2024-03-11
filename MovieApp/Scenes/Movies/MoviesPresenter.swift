@@ -41,7 +41,7 @@ class MoviesPresenter: MoviesPresenterProtocol {
     var nowPlayingPage: Int = 1
     var topRatedPage: Int = 1
     var popularPage: Int = 1
-    
+   
     var view: MoviesViewProtocol?
         
     required init(_ view: MoviesViewProtocol) {

@@ -6,20 +6,11 @@
 //
 
 import Foundation
+import UIKit
 import SwiftData
 
 @Model
 class Movie: Codable, Identifiable, Equatable, Hashable {
-    enum CodingKeys: String, CodingKey {
-        case title
-        case id
-        case backdrop = "backdrop_path"
-        case poster = "poster_path"
-        case releaseDate = "release_date"
-        case overview
-        case vote = "vote_average"
-    }
-    
     var title: String?
     var id: Int?
     var backdrop: String?
@@ -28,8 +19,18 @@ class Movie: Codable, Identifiable, Equatable, Hashable {
     var overview: String?
     var vote: Double?
     var category: String?
+    var imageData: String?
     
-    init(title: String?, id: Int?, backdrop: String?, poster: String?, releaseDate: String?, overview: String?, vote: Double?) {
+    init(
+        title: String?,
+        id: Int?,
+        backdrop: String?,
+        poster: String?,
+        releaseDate: String?,
+        overview: String?,
+        vote: Double?,
+        category: String? = nil,
+        imageData: String? = nil) {
         self.title = title
         self.id = id
         self.backdrop = backdrop
@@ -37,6 +38,18 @@ class Movie: Codable, Identifiable, Equatable, Hashable {
         self.releaseDate = releaseDate
         self.overview = overview
         self.vote = vote
+        self.category = category
+        self.imageData = imageData
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case title
+        case id
+        case backdrop = "backdrop_path"
+        case poster = "poster_path"
+        case releaseDate = "release_date"
+        case overview
+        case vote = "vote_average"
     }
     
     required init(from decoder: Decoder) throws {
@@ -60,5 +73,9 @@ class Movie: Codable, Identifiable, Equatable, Hashable {
         try container.encode(overview, forKey: .overview)
         try container.encode(vote, forKey: .vote)
     }
-    
+   
+    func getImage() -> UIImage? {
+        guard let data = imageData?.toData() else { return nil }
+        return UIImage(data: data)
+    }
 }

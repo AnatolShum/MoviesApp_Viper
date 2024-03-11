@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 
 protocol MovieCellDelegate: AnyObject {
     func reloadDataSource()
@@ -15,9 +16,10 @@ class MovieCell: UICollectionViewCell {
     static let reuseIdentifier = "MovieCell"
     
     weak var delegate: MovieCellDelegate?
-    
-    private var movie: Movie!
-    private var manager: ProtocolFavouriteManager!
+
+    private var favouriteManager: ProtocolFavouriteManager?
+    private var cancellable: [AnyCancellable] = []
+    @Published private var movieImage: UIImage? = nil
     
     let movieImageView: UIImageView = {
         let image = UIImageView()
@@ -62,7 +64,9 @@ class MovieCell: UICollectionViewCell {
         didSet {
             DispatchQueue.main.async {
                 let configuration = UIImage.SymbolConfiguration(pointSize: 30, weight: .regular)
-                let image = UIImage(systemName: self.imageName(), withConfiguration: configuration)
+                let image = UIImage(
+                    systemName: self.isFavourite ? "heart.fill" : "heart",
+                    withConfiguration: configuration)
                 self.favouritesButton.setImage(image, for: .normal)
             }
         }
@@ -83,6 +87,7 @@ class MovieCell: UICollectionViewCell {
         self.clipsToBounds = true
         self.backgroundColor = .black.withAlphaComponent(0.9)
         createUI()
+        subscribe()
         setConstraints()
         favouritesButton.addTarget(self, action: #selector(favouritesTapped), for: .touchUpInside)
     }
@@ -122,23 +127,26 @@ class MovieCell: UICollectionViewCell {
     
     @objc func favouritesTapped() {
         delegate?.reloadDataSource()
-        guard manager != nil else { return }
-        manager.toggleFavourites()
+        guard let favouriteManager else { return }
+        favouriteManager.toggleFavourites()
         isFavourite.toggle()
     }
     
     func configureCell(with movie: Movie) {
-        self.movie = movie
-        self.manager = FavouriteManager()
-        manager.delegate = self
+        self.favouriteManager = FavouriteManager()
+        favouriteManager?.delegate = self
         
         DispatchQueue.main.async {
-            self.manager.checkFavourite()
+            self.favouriteManager?.checkFavourite()
             self.titleLabel.text = movie.title
             self.releaseDateLabel.text = self.formattedDate(movie.releaseDate)
             self.circleProgressView.progressAnimation(movie.vote)
             self.circleProgressView.voteLabel.text = self.formattedString(movie.vote ?? 0)
-            self.fetchImage(movie.poster)
+            if let image = movie.getImage() {
+                self.movieImage = image
+            } else {
+                self.getImage(movie.poster)
+            }
         }
     }
     
@@ -155,27 +163,32 @@ class MovieCell: UICollectionViewCell {
         return dateFormatter.string(from: date)
     }
     
-    private func fetchImage(_ poster: String?) {
-        Task {
-            do {
-                let poster = try await Network.Client.shared.fetchImage(with: poster)
-                DispatchQueue.main.async {
-                    self.movieImageView.image = poster
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.movieImageView.image = UIImage(systemName: "film")
-                    self.movieImageView.tintColor = .white.withAlphaComponent(0.1)
-                    self.movieImageView.contentMode = .scaleAspectFit
-                }
-                print(error.localizedDescription)
-            }
-        }
+    private func subscribe() {
+        $movieImage
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.subscribeImage, on: movieImageView)
+            .store(in: &cancellable)
     }
     
-    private func imageName() -> String {
-        isFavourite ? "heart.fill" : "heart"
+    private func getImage(_ path: String?) {
+        Network.Client.shared.fetchImage(with: path)
+            .sink(receiveCompletion: { [weak self] result in
+                switch result {
+                case .finished:
+                    break
+                case .failure(let error):
+                    print(error)
+                    self?.movieImage = UIImage(systemName: "film")
+                    self?.movieImageView.tintColor = .white.withAlphaComponent(0.1)
+                    self?.movieImageView.contentMode = .scaleAspectFit
+                }
+            }, receiveValue: { [weak self] image in
+                self?.movieImage = image
+            })
+            .store(in: &cancellable)
     }
+
 }
 
 extension MovieCell: ProtocolIsFavourites { }
+

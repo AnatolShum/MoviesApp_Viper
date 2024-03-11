@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 
 protocol MovieTrailerCellDelegate: AnyObject {
     func playTrailer(key: String)
@@ -15,7 +16,9 @@ class MovieTrailerCell: UICollectionViewCell {
     static let reuseIdentifier = "TrailerCell"
     
     weak var delegate: MovieTrailerCellDelegate?
-    var videoKey: String?
+    private var videoKey: String?
+    private var cancellable: [AnyCancellable] = []
+    @Published private var trailerImage: UIImage? = nil
     
     let trailerImageView: UIImageView = {
         let image = UIImageView()
@@ -48,6 +51,7 @@ class MovieTrailerCell: UICollectionViewCell {
         super .init(frame: frame)
         
         createUI()
+        subscribe()
         setConstraints()
     }
     
@@ -84,20 +88,42 @@ class MovieTrailerCell: UICollectionViewCell {
     
     func configureCell(with trailer: Trailer) {
         DispatchQueue.main.async {
-            self.trailerImageView.contentMode = .scaleAspectFill
-            self.trailerImageView.image = self.getImage(trailer.imageData)
             self.trailerTitle.text = trailer.title
             self.videoKey = trailer.videoKey
             self.setButtonImage(trailer)
+            if let image = trailer.getImage() {
+                self.trailerImageView.contentMode = .scaleAspectFill
+                self.trailerImage = image
+            } else {
+                self.getImage(trailer.imagePath)
+            }
         }
     }
     
-    private func getImage(_ data: Data?) -> UIImage {
-        if let data {
-            return UIImage(data: data)!
-        } else {
-            return UIImage(systemName: "photo")!
-        }
+    private func subscribe() {
+        $trailerImage
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.subscribeImage, on: trailerImageView)
+            .store(in: &cancellable)
+    }
+    
+    private func getImage(_ path: String?) {
+        Network.Client.shared.fetchImage(with: path)
+            .sink(receiveCompletion: { [weak self] result in
+                switch result {
+                case .finished:
+                    break
+                case .failure(let error):
+                    print(error)
+                    self?.trailerImage = UIImage(systemName: "film")
+                    self?.trailerImageView.tintColor = .white.withAlphaComponent(0.1)
+                    self?.trailerImageView.contentMode = .scaleAspectFit
+                }
+            }, receiveValue: { [weak self] image in
+                self?.trailerImageView.contentMode = .scaleAspectFill
+                self?.trailerImage = image
+            })
+            .store(in: &cancellable)
     }
     
     private func setButtonImage(_ trailer: Trailer) {

@@ -45,17 +45,3 @@ enum Entities: Hashable {
         }
     }
 }
-
-enum Categories: String {
-    case upcoming = "Upcoming movies"
-    case nowPlaying = "Now playing movies"
-    case topRated = "Top rated movies"
-    case popular = "Popular movies"
-    case photos
-    case videos
-    case trailers
-    
-    var identifier: String {
-        return rawValue
-    }
-}

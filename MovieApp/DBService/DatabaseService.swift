@@ -26,136 +26,48 @@ class DatabaseService {
         }
     }
     
-    func saveItem(_ entity: Entities) {
-        switch entity {
-        case .movie(let movie):
-            self.context?.insert(movie)
-        case .photo(let photo):
-            self.context?.insert(photo)
-        case .video(let video):
-            self.context?.insert(video)
-        case .trailer(let trailer):
-            self.context?.insert(trailer)
-        }
+    func saveItem<Model: PersistentModel>(_ model: Model) {
+        self.context?.insert(model)
     }
     
-    func checkIfItemInDb(category: Categories, id: Int) -> Bool {
+    func isItemExist<Model: PersistentModel>(item: Model) -> Bool {
         var exist: Bool = false
-        fetchItems(category: category) { data, error in
-            if let data {
-                switch category {
-                case .upcoming, .nowPlaying, .topRated, .popular:
-                    let movies = data as! [Movie]
-                    exist = movies.contains { $0.id == id }
-                case .trailers:
-                    let trailers = data as! [Trailer]
-                    exist = trailers.contains { $0.id == id }
-                default:
-                    exist = false
+        fetchItems(predicate: nil) { (result: Result<[Model], Error>) in
+            switch result {
+            case .success(let models):
+                if let movies = models as? [Movie], let item = item as? Movie {
+                    exist = movies.contains { $0.id == item.id && $0.category == item.category }
                 }
+                if let trailers = models as? [Trailer], let item = item as? Trailer {
+                    exist = trailers.contains { $0.id == item.id }
+                }
+                exist = models.contains { $0 == item }
+            case .failure(_):
+                break
             }
         }
         
         return exist
     }
     
-    func fetchItems(category: Categories, completion: @escaping([Any]?, Error?)->(Void)) {
-        let categoryValue = category.identifier
-        let moviePredicate = #Predicate<Movie> { $0.category == categoryValue }
-        switch category {
-        case .upcoming:
-            let descriptor = FetchDescriptor<Movie>(predicate: moviePredicate)
-            do {
-                let data = try context?.fetch(descriptor)
-                completion(data, nil)
-            } catch {
-                completion(nil, error)
-            }
-        case .nowPlaying:
-            let descriptor = FetchDescriptor<Movie>(predicate: moviePredicate)
-            do {
-                let data = try context?.fetch(descriptor)
-                completion(data, nil)
-            } catch {
-                completion(nil, error)
-            }
-        case .topRated:
-            let descriptor = FetchDescriptor<Movie>(predicate: moviePredicate)
-            do {
-                let data = try context?.fetch(descriptor)
-                completion(data, nil)
-            } catch {
-                completion(nil, error)
-            }
-        case .popular:
-            let descriptor = FetchDescriptor<Movie>(predicate: moviePredicate)
-            do {
-                let data = try context?.fetch(descriptor)
-                completion(data, nil)
-            } catch {
-                completion(nil, error)
-            }
-        case .photos:
-            let descriptor = FetchDescriptor<Photos>()
-            do {
-                let data = try context?.fetch(descriptor)
-                completion(data, nil)
-            } catch {
-                completion(nil, error)
-            }
-        case .videos:
-            let descriptor = FetchDescriptor<Videos>()
-            do {
-                let data = try context?.fetch(descriptor)
-                completion(data, nil)
-            } catch {
-                completion(nil, error)
-            }
-        case .trailers:
-            let descriptor = FetchDescriptor<Trailer>()
-            do {
-                let data = try context?.fetch(descriptor)
-                completion(data, nil)
-            } catch {
-                completion(nil, error)
-            }
+    func fetchItems<Model: PersistentModel>(predicate: Predicate<Model>?, completion: @escaping (Result<[Model], Error>)->(Void)) {
+        var descriptor: FetchDescriptor<Model>
+        if let predicate {
+            descriptor = FetchDescriptor<Model>(predicate: predicate)
+        } else {
+            descriptor = FetchDescriptor<Model>()
         }
-    }
-    
-    func filterMovie(id: Int, completion: @escaping([Movie]?, Error?)->(Void)) {
-        let predicate = #Predicate<Movie> { $0.id == id }
-        let descriptor = FetchDescriptor<Movie>(predicate: predicate)
+        
         do {
             let data = try context?.fetch(descriptor)
-            completion(data, nil)
+            completion(.success(data ?? []))
         } catch {
-            completion(nil, error)
+            completion(.failure(error))
         }
     }
     
-    func deleteItems(_ entity: Entities) {
-        switch entity {
-        case .movie(let movie):
-            context?.delete(movie)
-        case .photo(let photo):
-            context?.delete(photo)
-        case .video(let video):
-            context?.delete(video)
-        case .trailer(let trailer):
-            context?.delete(trailer)
-        }
-    }
-    
-    func updateTrailer(trailer: Trailer, newImageData: Data?, newKey: String?) {
-        let trailerToBeUpdated = trailer
-        
-        if let newImageData {
-            trailerToBeUpdated.imageData = newImageData
-        }
-        
-        if let newKey {
-            trailerToBeUpdated.videoKey = newKey
-        }
+    func deleteItems<Model: PersistentModel>(_ model: Model) {
+        context?.delete(model)
     }
     
 }

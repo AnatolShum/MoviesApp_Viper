@@ -10,13 +10,6 @@ import SwiftData
 
 @Model
 class Videos: Codable, Identifiable, Equatable, Hashable {
-    enum CodingKeys: String, CodingKey {
-        case key
-        case site
-        case type
-        case official
-    }
-    
     var key: String?
     var site: String?
     var type: String?
@@ -27,6 +20,13 @@ class Videos: Codable, Identifiable, Equatable, Hashable {
         self.site = site
         self.type = type
         self.official = official
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case key
+        case site
+        case type
+        case official
     }
     
     required init(from decoder: Decoder) throws {

@@ -10,14 +10,14 @@ import SwiftData
 
 @Model
 class Photos: Codable, Identifiable, Equatable, Hashable {
-    enum CodingKeys: String, CodingKey {
-        case path = "file_path"
-    }
-    
     var path: String?
     
     init(path: String?) {
         self.path = path
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case path = "file_path"
     }
     
     required init(from decoder: Decoder) throws {

@@ -18,5 +18,6 @@ extension Network {
         case couldNotEncode
         case couldNotDecode
         case couldNotFetchData
+        case unknownError
     }
 }

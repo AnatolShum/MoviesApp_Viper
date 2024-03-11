@@ -47,12 +47,6 @@ class MoviesController: UICollectionViewController, MoviesViewProtocol {
         collectionView.showsVerticalScrollIndicator = false
     }
     
-    override func viewIsAppearing(_ animated: Bool) {
-        super.viewIsAppearing(animated)
-        
-        
-    }
-    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
      

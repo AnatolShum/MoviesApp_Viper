@@ -45,3 +45,11 @@ extension UIImage {
         return color
     }
 }
+
+extension UIImage {
+    func toString() -> String? {
+        guard let data = self.pngData() else { return nil }
+        return String(decoding: data, as: UTF8.self)
+    }
+}
+
