@@ -19,7 +19,7 @@ class Movie: Codable, Identifiable, Equatable, Hashable {
     var overview: String?
     var vote: Double?
     var category: String?
-    var imageData: String?
+    var imageData: Data?
     
     init(
         title: String?,
@@ -30,7 +30,7 @@ class Movie: Codable, Identifiable, Equatable, Hashable {
         overview: String?,
         vote: Double?,
         category: String? = nil,
-        imageData: String? = nil) {
+        imageData: Data? = nil) {
         self.title = title
         self.id = id
         self.backdrop = backdrop
@@ -75,7 +75,7 @@ class Movie: Codable, Identifiable, Equatable, Hashable {
     }
    
     func getImage() -> UIImage? {
-        guard let data = imageData?.toData() else { return nil }
+        guard let data = imageData else { return nil }
         return UIImage(data: data)
     }
 }

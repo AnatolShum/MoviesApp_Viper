@@ -89,7 +89,7 @@ class MoviesInteractor: MoviesInteractorProtocol {
         Network.Client.shared.fetchImage(with: movie.poster) { result in
             switch result {
             case .success(let image):
-                movieToSave.imageData = image.toString()
+                movieToSave.imageData = image.pngData()
                 self.saveItemToDb(movieToSave)
             case .failure(let error):
                 print(error)
