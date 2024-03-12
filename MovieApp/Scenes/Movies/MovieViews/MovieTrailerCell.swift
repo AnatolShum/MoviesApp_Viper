@@ -95,7 +95,7 @@ class MovieTrailerCell: UICollectionViewCell {
                 self.trailerImageView.contentMode = .scaleAspectFill
                 self.trailerImage = image
             } else {
-                self.getImage(trailer.imagePath)
+                self.getImage(trailer: trailer)
             }
         }
     }
@@ -107,13 +107,16 @@ class MovieTrailerCell: UICollectionViewCell {
             .store(in: &cancellable)
     }
     
-    private func getImage(_ path: String?) {
+    private func getImage(trailer: Trailer) {
         DispatchQueue.main.async {
             Task {
                 do {
-                    let image = try await Network.Client.shared.fetchImage(with: path)
+                    let image = try await Network.Client.shared.fetchImage(with: trailer.imagePath)
                     self.trailerImageView.contentMode = .scaleAspectFill
                     self.trailerImage = image
+                    let data = image.pngData()
+                    let trailerToSave = trailer
+                    trailerToSave.imageData = data
                 } catch {
                     print(error)
                     self.trailerImage = UIImage(systemName: "film")

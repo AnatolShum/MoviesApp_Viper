@@ -145,7 +145,7 @@ class MovieCell: UICollectionViewCell {
             if let image = movie.getImage() {
                 self.movieImage = image
             } else {
-                self.getImage(movie.poster)
+                self.getImage(movie: movie)
             }
         }
     }
@@ -170,12 +170,15 @@ class MovieCell: UICollectionViewCell {
             .store(in: &cancellable)
     }
     
-    private func getImage(_ path: String?) {
+    private func getImage(movie: Movie) {
         DispatchQueue.main.async {
             Task {
                 do {
-                    let image = try await Network.Client.shared.fetchImage(with: path)
+                    let image = try await Network.Client.shared.fetchImage(with: movie.poster)
                     self.movieImage = image
+                    let data = image.pngData()
+                    let movieToSave = movie
+                    movieToSave.imageData = data
                 } catch {
                     self.movieImage = UIImage(systemName: "film")
                     self.movieImageView.tintColor = .white.withAlphaComponent(0.1)

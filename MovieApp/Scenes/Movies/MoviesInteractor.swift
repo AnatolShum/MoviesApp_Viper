@@ -41,8 +41,7 @@ class MoviesInteractor: MoviesInteractorProtocol {
         self.presenter = presenter
     }
     
-    private var imageQueue = DispatchQueue(label: "com.MovieApp.ImageBackgroundQueue", qos: .background)
-    private var trailerGroup = DispatchGroup()
+    private let operationQueue = OperationQueue()
     private var dbService = DatabaseService.shared
     
     func fetchUpcoming(with page: Int) {
@@ -56,9 +55,7 @@ class MoviesInteractor: MoviesInteractorProtocol {
                 let entities = tenMovies.map { (movie: Movie) -> Entities in
                     let movieToSave = movie
                     movieToSave.category = category
-                    
-                    self.updateImage(movieToSave)
-                    
+                 
                     return .movie(movieToSave)
                 }
                 
@@ -85,78 +82,84 @@ class MoviesInteractor: MoviesInteractorProtocol {
         }
     }
     
-    private func updateImage(_ movie: Movie) {
-        imageQueue.async {
-            let movieToSave = movie
-            Task {
-                do {
-                    let image = try await Network.Client.shared.fetchImage(with: movie.poster)
-                    movieToSave.imageData = image.pngData()
-                    DispatchQueue.main.async {
-                        self.saveItemToDb(movieToSave)
-                    }
-                } catch {
-                    print(error)
-                }
-            }
-        }
-    }
-    
     private func saveItemToDb(_ movie: Movie) {
-        if !self.dbService.isItemExist(item: movie) {
-            self.dbService.saveItem(movie)
+        DispatchQueue.main.async {
+            if !self.dbService.isItemExist(item: movie) {
+                self.dbService.saveItem(movie)
+            }
         }
     }
     
     private func setTrailers(_ movies: [Movie]) {
-        let entities = movies.compactMap { (movie: Movie) -> Entities? in
-            guard let id = movie.id else { return nil }
-            let title = movie.title
-            let trailer = Trailer(id: id, title: title, imagePath: nil, imageData: nil, videoKey: nil)
-            
-            self.trailerGroup.enter()
+        var entities: [Entities] = []
+        
+        let forEachOperation = BlockOperation {
+            movies.forEach { (movie: Movie) in
+                guard let id = movie.id else { return }
+                let title = movie.title
+                let trailer = Trailer(id: id, title: title, imagePath: nil, imageData: nil, videoKey: nil)
+                
+                self.fillTrailer(trailer: trailer) { trailer in
+                    entities.append(.trailer(trailer))
+                }
+                
+                if !self.dbService.isItemExist(item: trailer) {
+                    self.dbService.saveItem(trailer)
+                }
+            }
+        }
+        
+        let outputOperation = BlockOperation {
+            self.output?.fetchTrailersSuccess(trailers: entities)
+        }
+        
+        outputOperation.addDependency(forEachOperation)
+        operationQueue.addOperation(forEachOperation)
+        OperationQueue.main.addOperation(outputOperation)
+    }
+    
+    private func fillTrailer(trailer: Trailer, completion: @escaping (Trailer) -> Void) {
+        let fetchPhotoOperation = BlockOperation {
             self.fetchPhoto(trailer) { path in
                 trailer.imagePath = path
             }
-            
-            self.trailerGroup.enter()
+        }
+        
+        let fetchVideoOperation = BlockOperation {
             self.fetchVideo(trailer) { key in
                 trailer.videoKey = key
             }
-            
-            if !self.dbService.isItemExist(item: trailer) {
-                self.dbService.saveItem(trailer)
-            }
-            
-            return .trailer(trailer)
         }
         
-        self.trailerGroup.notify(queue: .main) {
-            if !entities.isEmpty {
-                self.output?.fetchTrailersSuccess(trailers: entities)
-            } else {
-                self.loadTrailerFromDB()
-            }
+        let completionOperation = BlockOperation {
+            completion(trailer)
         }
+        
+        completionOperation.addDependency(fetchPhotoOperation)
+        completionOperation.addDependency(fetchVideoOperation)
+        operationQueue.addOperations([fetchPhotoOperation, fetchVideoOperation], waitUntilFinished: false)
+        OperationQueue.main.addOperation(completionOperation)
     }
     
     private func loadTrailerFromDB() {
-        self.dbService.fetchItems(predicate: nil) { (result: Result<[Trailer], Error>) in
-            switch result {
-            case .success(let trailers):
-                let entities = trailers.compactMap { (trailer: Trailer) -> Entities? in
-                    if self.isTrailersFull(trailer) {
-                        return .trailer(trailer)
-                    } else {
-                        self.dbService.deleteItems(trailer)
-                        return nil
+        DispatchQueue.main.async {
+            self.dbService.fetchItems(predicate: nil) { (result: Result<[Trailer], Error>) in
+                switch result {
+                case .success(let trailers):
+                    let entities = trailers.compactMap { (trailer: Trailer) -> Entities? in
+                        if self.isTrailersFull(trailer) {
+                            return .trailer(trailer)
+                        } else {
+                            self.dbService.deleteItems(trailer)
+                            return nil
+                        }
                     }
+                    
+                    self.output?.fetchTrailersSuccess(trailers: entities)
+                case .failure(let error):
+                    self.output?.fetchTrailersFailure(error: error)
+                    print(error)
                 }
-                
-                self.output?.fetchTrailersSuccess(trailers: entities)
-            case .failure(let error):
-                self.output?.fetchTrailersFailure(error: error)
-                print(error)
             }
         }
     }
@@ -172,26 +175,11 @@ class MoviesInteractor: MoviesInteractorProtocol {
             case .success(let data):
                 let photos = data.backdrops
                 let path = self.chooseFirstPhoto(photos)
-                self.fetchImage(path: path, trailer: trailer)
+                
                 completion(path)
-                self.trailerGroup.leave()
             case .failure(let error):
                 print(error.localizedDescription)
                 completion(nil)
-                self.trailerGroup.leave()
-            }
-        }
-    }
-    
-    private func fetchImage(path: String?, trailer: Trailer) {
-        Task {
-            do {
-                let image = try await Network.Client.shared.fetchImage(with: path)
-                let data = image.pngData()
-                let trailerToSave = trailer
-                trailerToSave.imageData = data
-            } catch {
-                print(error)
             }
         }
     }
@@ -209,15 +197,13 @@ class MoviesInteractor: MoviesInteractorProtocol {
                 let videos = data.results
                 let key = self.videoKey(videos)
                 completion(key)
-                self.trailerGroup.leave()
             case .failure(let error):
                 print(error.localizedDescription)
                 completion(nil)
-                self.trailerGroup.leave()
             }
         }
     }
-  
+    
     typealias TrailerKey = String?
     private func videoKey(_ videos: [Videos]) -> TrailerKey {
         guard !videos.isEmpty else {
@@ -243,8 +229,6 @@ class MoviesInteractor: MoviesInteractorProtocol {
                 let entities = data.results.map { (movie: Movie) -> Entities in
                     let movieToSave = movie
                     movieToSave.category = category
-                    
-                    self.updateImage(movieToSave)
                     
                     return .movie(movieToSave)
                 }
@@ -281,8 +265,6 @@ class MoviesInteractor: MoviesInteractorProtocol {
                     let movieToSave = movie
                     movieToSave.category = category
                     
-                    self.updateImage(movieToSave)
-                    
                     return .movie(movieToSave)
                 }
                 self.output?.fetchTopRatedSuccess(topRatedMovies: entities)
@@ -316,9 +298,7 @@ class MoviesInteractor: MoviesInteractorProtocol {
                 let entities = data.results.map { (movie: Movie) -> Entities in
                     let movieToSave = movie
                     movieToSave.category = category
-                    
-                    self.updateImage(movieToSave)
-                    
+ 
                     return .movie(movieToSave)
                 }
                 self.output?.fetchPopularSuccess(popularMovies: entities)
@@ -344,15 +324,17 @@ class MoviesInteractor: MoviesInteractorProtocol {
     }
     
     func fetchMovieById(id: Int) {
-        let predicate = #Predicate<Movie> { $0.id == id }
-        dbService.fetchItems(predicate: predicate) { [weak self] result in
-            switch result {
-            case .success(let movies):
-                if movies.count > 0 {
-                    self?.output?.fetchedMovieById(movie: movies.first!)
+        DispatchQueue.main.async {
+            let predicate = #Predicate<Movie> { $0.id == id }
+            self.dbService.fetchItems(predicate: predicate) { [weak self] result in
+                switch result {
+                case .success(let movies):
+                    if movies.count > 0 {
+                        self?.output?.fetchedMovieById(movie: movies.first!)
+                    }
+                case .failure(let error):
+                    print(error)
                 }
-            case .failure(let error):
-                print(error)
             }
         }
     }
