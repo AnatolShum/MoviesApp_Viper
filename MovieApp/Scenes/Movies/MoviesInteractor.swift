@@ -41,6 +41,7 @@ class MoviesInteractor: MoviesInteractorProtocol {
         self.presenter = presenter
     }
     
+    private var imageQueue = DispatchQueue(label: "com.MovieApp.ImageBackgroundQueue", qos: .background)
     private var trailerGroup = DispatchGroup()
     private var dbService = DatabaseService.shared
     
@@ -85,14 +86,18 @@ class MoviesInteractor: MoviesInteractorProtocol {
     }
     
     private func updateImage(_ movie: Movie) {
-        let movieToSave = movie
-        Network.Client.shared.fetchImage(with: movie.poster) { result in
-            switch result {
-            case .success(let image):
-                movieToSave.imageData = image.pngData()
-                self.saveItemToDb(movieToSave)
-            case .failure(let error):
-                print(error)
+        imageQueue.async {
+            let movieToSave = movie
+            Task {
+                do {
+                    let image = try await Network.Client.shared.fetchImage(with: movie.poster)
+                    movieToSave.imageData = image.pngData()
+                    DispatchQueue.main.async {
+                        self.saveItemToDb(movieToSave)
+                    }
+                } catch {
+                    print(error)
+                }
             }
         }
     }
@@ -104,23 +109,34 @@ class MoviesInteractor: MoviesInteractorProtocol {
     }
     
     private func setTrailers(_ movies: [Movie]) {
-        movies.forEach { movie in
-            guard let id = movie.id else { return }
+        let entities = movies.compactMap { (movie: Movie) -> Entities? in
+            guard let id = movie.id else { return nil }
             let title = movie.title
             let trailer = Trailer(id: id, title: title, imagePath: nil, imageData: nil, videoKey: nil)
+            
+            self.trailerGroup.enter()
+            self.fetchPhoto(trailer) { path in
+                trailer.imagePath = path
+            }
+            
+            self.trailerGroup.enter()
+            self.fetchVideo(trailer) { key in
+                trailer.videoKey = key
+            }
+            
             if !self.dbService.isItemExist(item: trailer) {
                 self.dbService.saveItem(trailer)
             }
             
-            self.trailerGroup.enter()
-            self.fetchPhotos(trailer)
-            
-            self.trailerGroup.enter()
-            self.fetchVideos(trailer)
+            return .trailer(trailer)
         }
         
         self.trailerGroup.notify(queue: .main) {
-            self.loadTrailerFromDB()
+            if !entities.isEmpty {
+                self.output?.fetchTrailersSuccess(trailers: entities)
+            } else {
+                self.loadTrailerFromDB()
+            }
         }
     }
     
@@ -149,30 +165,33 @@ class MoviesInteractor: MoviesInteractorProtocol {
         return trailer.title != nil && trailer.imagePath != nil && trailer.videoKey != nil
     }
     
-    private func fetchPhotos(_ trailer: Trailer) {
+    private func fetchPhoto(_ trailer: Trailer, completion: @escaping (String?) -> Void) {
         Network.Client.shared.get(.photos(id: trailer.id)) { [weak self] (result: Result<Network.Types.Response.Backdrops, Network.Errors>) in
             guard let self else { return }
             switch result {
             case .success(let data):
-                let trailerToSave = trailer
                 let photos = data.backdrops
                 let path = self.chooseFirstPhoto(photos)
-                trailerToSave.imagePath = path
-                
-                Network.Client.shared.fetchImage(with: path) { result in
-                    switch result {
-                    case .success(let image):
-                        let data = image.pngData()
-                        trailerToSave.imageData = data
-                        self.trailerGroup.leave()
-                    case .failure(let error):
-                        print(error.localizedDescription)
-                        self.trailerGroup.leave()
-                    }
-                }
-            case .failure(let error):
+                self.fetchImage(path: path, trailer: trailer)
+                completion(path)
                 self.trailerGroup.leave()
+            case .failure(let error):
                 print(error.localizedDescription)
+                completion(nil)
+                self.trailerGroup.leave()
+            }
+        }
+    }
+    
+    private func fetchImage(path: String?, trailer: Trailer) {
+        Task {
+            do {
+                let image = try await Network.Client.shared.fetchImage(with: path)
+                let data = image.pngData()
+                let trailerToSave = trailer
+                trailerToSave.imageData = data
+            } catch {
+                print(error)
             }
         }
     }
@@ -182,23 +201,23 @@ class MoviesInteractor: MoviesInteractorProtocol {
         return photos.first?.path
     }
     
-    private func fetchVideos(_ trailer: Trailer) {
+    private func fetchVideo(_ trailer: Trailer, completion: @escaping (String?) -> Void) {
         Network.Client.shared.get(.videos(id: trailer.id)) { [weak self] (result: Result<Network.Types.Response.VideoResults, Network.Errors>) in
             guard let self else { return }
             switch result {
             case .success(let data):
                 let videos = data.results
                 let key = self.videoKey(videos)
-                let trailerToSave = trailer
-                trailerToSave.videoKey = key
+                completion(key)
                 self.trailerGroup.leave()
             case .failure(let error):
-                self.trailerGroup.leave()
                 print(error.localizedDescription)
+                completion(nil)
+                self.trailerGroup.leave()
             }
         }
     }
-    
+  
     typealias TrailerKey = String?
     private func videoKey(_ videos: [Videos]) -> TrailerKey {
         guard !videos.isEmpty else {

@@ -108,22 +108,20 @@ class MovieTrailerCell: UICollectionViewCell {
     }
     
     private func getImage(_ path: String?) {
-        Network.Client.shared.fetchImage(with: path)
-            .sink(receiveCompletion: { [weak self] result in
-                switch result {
-                case .finished:
-                    break
-                case .failure(let error):
+        DispatchQueue.main.async {
+            Task {
+                do {
+                    let image = try await Network.Client.shared.fetchImage(with: path)
+                    self.trailerImageView.contentMode = .scaleAspectFill
+                    self.trailerImage = image
+                } catch {
                     print(error)
-                    self?.trailerImage = UIImage(systemName: "film")
-                    self?.trailerImageView.tintColor = .white.withAlphaComponent(0.1)
-                    self?.trailerImageView.contentMode = .scaleAspectFit
+                    self.trailerImage = UIImage(systemName: "film")
+                    self.trailerImageView.tintColor = .white.withAlphaComponent(0.1)
+                    self.trailerImageView.contentMode = .scaleAspectFit
                 }
-            }, receiveValue: { [weak self] image in
-                self?.trailerImageView.contentMode = .scaleAspectFill
-                self?.trailerImage = image
-            })
-            .store(in: &cancellable)
+            }
+        }
     }
     
     private func setButtonImage(_ trailer: Trailer) {

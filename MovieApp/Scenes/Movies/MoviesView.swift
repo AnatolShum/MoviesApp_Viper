@@ -20,16 +20,14 @@ protocol MoviesViewProtocol {
 }
 
 class MoviesController: UICollectionViewController, MoviesViewProtocol {
+    private let assembly: MoviesAssemblyProtocol = MoviesAssembly()
+    let colorView = ColorView()
     var presenter: MoviesPresenterProtocol?
-    
     var sections = [MoviesSections]()
     var dataSource: UICollectionViewDiffableDataSource<MoviesSections, Entities>!
     var snapshot = NSDiffableDataSourceSnapshot<MoviesSections, Entities>()
     var filteredMovie: Movie? = nil
-    
-    private let assembly: MoviesAssemblyProtocol = MoviesAssembly()
-    private let colorView = ColorView()
-    
+    var loadingView: LoadingView?
     var trailers: [Entities] = []
     var nowPlayingMovies: [Entities] = []
     var topRatedMovies: [Entities] = []
@@ -39,6 +37,7 @@ class MoviesController: UICollectionViewController, MoviesViewProtocol {
         super.viewDidLoad()
        
         title = "Movies"
+        showLoadingView()
         assembly.configure(viewController: self)
         collectionView.backgroundView = colorView
         collectionView.collectionViewLayout = createLayout()

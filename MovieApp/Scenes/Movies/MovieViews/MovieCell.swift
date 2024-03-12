@@ -171,21 +171,18 @@ class MovieCell: UICollectionViewCell {
     }
     
     private func getImage(_ path: String?) {
-        Network.Client.shared.fetchImage(with: path)
-            .sink(receiveCompletion: { [weak self] result in
-                switch result {
-                case .finished:
-                    break
-                case .failure(let error):
-                    print(error)
-                    self?.movieImage = UIImage(systemName: "film")
-                    self?.movieImageView.tintColor = .white.withAlphaComponent(0.1)
-                    self?.movieImageView.contentMode = .scaleAspectFit
+        DispatchQueue.main.async {
+            Task {
+                do {
+                    let image = try await Network.Client.shared.fetchImage(with: path)
+                    self.movieImage = image
+                } catch {
+                    self.movieImage = UIImage(systemName: "film")
+                    self.movieImageView.tintColor = .white.withAlphaComponent(0.1)
+                    self.movieImageView.contentMode = .scaleAspectFit
                 }
-            }, receiveValue: { [weak self] image in
-                self?.movieImage = image
-            })
-            .store(in: &cancellable)
+            }
+        }
     }
 
 }

@@ -59,6 +59,8 @@
 		3C922FEE2B3098260076AF75 /* MovieTrailerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C922FED2B3098260076AF75 /* MovieTrailerCell.swift */; };
 		3C922FF02B30AB040076AF75 /* FooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C922FEF2B30AB040076AF75 /* FooterView.swift */; };
 		3C922FF62B335DB30076AF75 /* MoviesAssembly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C922FF52B335DB30076AF75 /* MoviesAssembly.swift */; };
+		3CD5A38C2BA05B4800F8B9EA /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CD5A38B2BA05B4800F8B9EA /* LoadingView.swift */; };
+		3CD5A38E2BA05DA300F8B9EA /* MoviesLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CD5A38D2BA05DA300F8B9EA /* MoviesLoadingView.swift */; };
 		3CEA7B3F2B48330F007DA039 /* PlayerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEA7B3E2B48330F007DA039 /* PlayerController.swift */; };
 		3CEA7B412B4834E5007DA039 /* MoviesTrailerCellDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEA7B402B4834E5007DA039 /* MoviesTrailerCellDelegate.swift */; };
 		3CEA7B442B4D43B0007DA039 /* DatabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEA7B432B4D43B0007DA039 /* DatabaseService.swift */; };
@@ -120,6 +122,8 @@
 		3C922FED2B3098260076AF75 /* MovieTrailerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieTrailerCell.swift; sourceTree = "<group>"; };
 		3C922FEF2B30AB040076AF75 /* FooterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FooterView.swift; sourceTree = "<group>"; };
 		3C922FF52B335DB30076AF75 /* MoviesAssembly.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoviesAssembly.swift; sourceTree = "<group>"; };
+		3CD5A38B2BA05B4800F8B9EA /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		3CD5A38D2BA05DA300F8B9EA /* MoviesLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoviesLoadingView.swift; sourceTree = "<group>"; };
 		3CEA7B3E2B48330F007DA039 /* PlayerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerController.swift; sourceTree = "<group>"; };
 		3CEA7B402B4834E5007DA039 /* MoviesTrailerCellDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoviesTrailerCellDelegate.swift; sourceTree = "<group>"; };
 		3CEA7B432B4D43B0007DA039 /* DatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseService.swift; sourceTree = "<group>"; };
@@ -158,6 +162,7 @@
 				3C87084C2B3594350079CC0A /* MoviesFooterDelegate.swift */,
 				3CEA7B402B4834E5007DA039 /* MoviesTrailerCellDelegate.swift */,
 				3C87084E2B35961A0079CC0A /* MoviesRegisterViews.swift */,
+				3CD5A38D2BA05DA300F8B9EA /* MoviesLoadingView.swift */,
 			);
 			path = MoviesViewExtensions;
 			sourceTree = "<group>";
@@ -282,6 +287,7 @@
 				3C922FB62B2CB5CB0076AF75 /* LineView.swift */,
 				3C922FB52B2CB5CB0076AF75 /* TitleView.swift */,
 				3C922FB72B2CB5CB0076AF75 /* VStack.swift */,
+				3CD5A38B2BA05B4800F8B9EA /* LoadingView.swift */,
 			);
 			path = ReusableViews;
 			sourceTree = "<group>";
@@ -454,6 +460,7 @@
 				3C922FDE2B2CBAFB0076AF75 /* MoviesRouter.swift in Sources */,
 				3C922FB32B2CB5AC0076AF75 /* ExtensionUIImage.swift in Sources */,
 				3C922FAF2B2CB5710076AF75 /* NetworkURL.swift in Sources */,
+				3CD5A38C2BA05B4800F8B9EA /* LoadingView.swift in Sources */,
 				3C922FCF2B2CB67E0076AF75 /* Movie.swift in Sources */,
 				3C922FD02B2CB67E0076AF75 /* Entities.swift in Sources */,
 				3C8708362B3437E00079CC0A /* MoviesSections.swift in Sources */,
@@ -475,6 +482,7 @@
 				3C922FAE2B2CB5710076AF75 /* NetworkErrors.swift in Sources */,
 				3C8708382B34384F0079CC0A /* MoviesSupplementaryViewKind.swift in Sources */,
 				3C5B46272B9F5707003C370C /* ExtensionCategory.swift in Sources */,
+				3CD5A38E2BA05DA300F8B9EA /* MoviesLoadingView.swift in Sources */,
 				3C922FC12B2CB5CB0076AF75 /* HStack.swift in Sources */,
 				3C922FE62B30847D0076AF75 /* SearchController.swift in Sources */,
 				3C922FBF2B2CB5CB0076AF75 /* ColorView.swift in Sources */,

@@ -93,6 +93,7 @@ extension MoviesController {
     
     func trailerDataSource() {
         DispatchQueue.main.async {
+            self.stopShowingLoadingView()
             let trailerSection: [MoviesSections] = [.trailer]
             let allCasesCount = MoviesSections.allCases.count
             let sectionCount = allCasesCount - trailerSection.count
